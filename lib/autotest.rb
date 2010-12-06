@@ -214,6 +214,7 @@ class Autotest
   attr_accessor(:completed_re,
                 :extra_class_map,
                 :extra_files,
+                :extra_test_paths,
                 :failed_results_re,
                 :files_to_test,
                 :find_order,
@@ -247,6 +248,7 @@ class Autotest
       /\d+ tests, \d+ assertions, \d+ failures, \d+ errors(, \d+ skips)?/
     self.extra_class_map   = {}
     self.extra_files       = []
+    self.extra_test_paths  = []
     self.failed_results_re = /^\s+\d+\) (?:Failure|Error):\n(.*?)\((.*?)\)/
     self.files_to_test     = new_hash_of_arrays
     self.find_order        = []
@@ -417,7 +419,7 @@ class Autotest
   def consolidate_failures failed
     filters = new_hash_of_arrays
 
-    class_map = Hash[*self.find_order.grep(/^test/).map { |f| # TODO: ugly
+    class_map = Hash[*self.find_order.grep(%r%^(#{test_paths})%).map { |f| # TODO: ugly
                        [path_to_classname(f), f]
                      }.flatten]
     class_map.merge! self.extra_class_map
@@ -431,6 +433,11 @@ class Autotest
     end
 
     filters
+  end
+
+  # extra_test_paths allows for multiple test paths with similar structures, eg rails engines
+  def test_paths
+    (['test'] + extra_test_paths).join('|')
   end
 
   ##
